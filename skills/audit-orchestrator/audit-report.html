@@ -1,0 +1,305 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Citation Funnel Audit: example.com</title><style>
+:root{--bg:#ffffff;--panel:#f4f8f5;--ink:#15324f;--mut:#5c7185;--line:#e2e8ee;
+--navy:#1c4e8a;--pista:#7cbf86;--pista-soft:#eaf5ec;--good:#4f9d5a}
+*{box-sizing:border-box}
+body{margin:0 auto;max-width:900px;background:var(--bg);color:var(--ink);padding:16px;
+font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+h1{font-size:20px;margin:0 0 2px;color:var(--navy)}
+.sub{color:var(--mut);font-size:13px;margin:2px 0 10px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.badge{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--mut)}
+.badge b{color:var(--ink)}
+.tools{display:flex;gap:8px;margin:10px 0 4px}
+.tools button{background:#fff;border:1px solid var(--line);color:var(--navy);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}
+.tools button:hover{border-color:var(--navy)}
+#funnel{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0 14px}
+.gate{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;color:var(--ink)}
+.gate.sel{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
+.gate-top{display:flex;justify-content:space-between;align-items:baseline}
+.gate-name{font-weight:600}
+.gate-score{font-weight:700;font-variant-numeric:tabular-nums}
+.bar{height:7px;background:#e9eef4;border-radius:6px;margin:6px 0;overflow:hidden}
+.bar-fill{height:100%}
+.gate-q{color:var(--mut);font-size:11px}
+.controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.controls .lbl{color:var(--mut);font-size:12px;margin-right:2px}
+.chip{background:#fff;border:1px solid var(--line);color:var(--mut);border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer}
+.chip.active{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:0 1px 2px rgba(21,50,79,.05)}
+.card-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;letter-spacing:.3px}
+.gate-tag{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.fid{font-size:11px;color:var(--mut);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.title{font-weight:600;flex:1 1 100%;color:var(--ink)}
+.why{font-size:13px;margin:8px 0}
+.ev-toggle{background:none;border:none;color:var(--navy);cursor:pointer;font-size:12px;padding:0;margin:2px 0}
+.evidence{display:none;white-space:pre-wrap;word-break:break-word;background:var(--pista-soft);border:1px solid var(--line);
+border-radius:8px;padding:8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#3f5a49;margin:6px 0}
+.evidence.open{display:block}
+.fix{display:flex;gap:8px;align-items:flex-start;margin-top:8px}
+.fix-text{font-size:13px;flex:1}
+.copy{white-space:nowrap;background:#fff;border:1px solid var(--line);color:var(--navy);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px}
+.copy.ok{border-color:var(--good);color:var(--good)}
+.section{margin:20px 0 8px;font-size:15px;font-weight:700;color:var(--navy)}
+.pro{list-style:none;padding:0;margin:0}
+.pro li{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:13px}
+.ppri{font-size:11px;color:var(--mut);text-transform:uppercase;margin-right:6px}
+.empty{color:var(--mut);font-size:13px;padding:12px}
+.foot{color:var(--mut);font-size:12px;margin-top:20px;border-top:1px solid var(--line);padding-top:10px}
+</style></head><body><h1>Citation Funnel Audit</h1><div class='sub'>example.com &middot; audited 2026-09-03T05:42:34Z</div><div class='badges'><span class='badge'>Findings <b>8</b></span><span class='badge'>Critical <b>0</b></span><span class='badge'>High <b>2</b></span><span class='badge'>Medium <b>6</b></span><span class='badge'>Low <b>0</b></span><span class="badge">Site type: <b>brochure</b> (low)</span></div><div class='tools'><button onclick='dl()'>Download report JSON</button></div><div class='sub'>Tap a gate to filter findings to that stage of the funnel.</div><div id='funnel'><button class="gate" data-gate="reach" onclick="setGate('reach')"><div class="gate-top"><span class="gate-name">Reach</span><span class="gate-score">90</span></div><div class="bar"><div class="bar-fill" style="width:90%;background:#4f9d5a"></div></div><div class="gate-q">Reach: can AI crawlers and fetchers get in?</div></button><button class="gate" data-gate="render" onclick="setGate('render')"><div class="gate-top"><span class="gate-name">Read</span><span class="gate-score">75</span></div><div class="bar"><div class="bar-fill" style="width:75%;background:#c9902a"></div></div><div class="gate-q">Read: does the content exist without JavaScript?</div></button><button class="gate" data-gate="quotability" onclick="setGate('quotability')"><div class="gate-top"><span class="gate-name">Quote</span><span class="gate-score">55</span></div><div class="bar"><div class="bar-fill" style="width:55%;background:#c0392b"></div></div><div class="gate-q">Quote: can a machine lift a clean fact?</div></button><button class="gate" data-gate="trust" onclick="setGate('trust')"><div class="gate-top"><span class="gate-name">Trust</span><span class="gate-score">80</span></div><div class="bar"><div class="bar-fill" style="width:80%;background:#4f9d5a"></div></div><div class="gate-q">Trust: is it fresh, corroborated, unambiguous?</div></button><button class="gate" data-gate="engagement" onclick="setGate('engagement')"><div class="gate-top"><span class="gate-name">Retain</span><span class="gate-score">90</span></div><div class="bar"><div class="bar-fill" style="width:90%;background:#4f9d5a"></div></div><div class="gate-q">Retain: does the arriving visitor stay?</div></button></div><div class='controls'><span class='lbl'>Gate:</span><button class="chip active" data-gchip="all" onclick="setGateChip('all')">All gates</button><button class="chip" data-gchip="reach" onclick="setGateChip('reach')">Reach</button><button class="chip" data-gchip="render" onclick="setGateChip('render')">Read</button><button class="chip" data-gchip="quotability" onclick="setGateChip('quotability')">Quote</button><button class="chip" data-gchip="trust" onclick="setGateChip('trust')">Trust</button><button class="chip" data-gchip="engagement" onclick="setGateChip('engagement')">Retain</button></div><div class='controls'><span class='lbl'>Severity:</span><button class="chip active" data-schip="all" onclick="setSev('all')">All</button><button class="chip" data-schip="critical" onclick="setSev('critical')">Critical (0)</button><button class="chip" data-schip="high" onclick="setSev('high')">High (2)</button><button class="chip" data-schip="medium" onclick="setSev('medium')">Medium (6)</button><button class="chip" data-schip="low" onclick="setSev('low')">Low (0)</button></div><div id='findings'><div class="card" data-gate="quotability" data-sev="high"><div class="card-head"><span class="pill" style="background:#d97b2e">HIGH</span><span class="gate-tag">Quote</span><span class="fid">F-QUOTE-002</span><span class="title">No structured data anywhere on sampled pages</span></div><div class="why"><b>Why it matters:</b> Schema markup is how a machine picks the exact fact out of the page without guessing (appendix concepts A and C).</div><button class="ev-toggle" onclick="tog(this)">Show evidence &#9656;</button><div class="evidence">0 JSON-LD blocks and no microdata across 1 pages (https://example.com/).</div><div class="fix"><div class="fix-text"><b>Fix (high priority):</b> Add JSON-LD to every page: Organization (with name, url, logo, sameAs) sitewide, plus the type matching each page (Product with Offer, FAQPage, Article, LocalBusiness).</div><button class="copy" data-fix="Add JSON-LD to every page: Organization (with name, url, logo, sameAs) sitewide, plus the type matching each page (Product with Offer, FAQPage, Article, LocalBusiness)." onclick="cp(this)">Copy fix</button></div></div><div class="card" data-gate="render" data-sev="high"><div class="card-head"><span class="pill" style="background:#d97b2e">HIGH</span><span class="gate-tag">Read</span><span class="fid">F-RENDER-002</span><span class="title">Homepage has very little machine-readable text</span></div><div class="why"><b>Why it matters:</b> A machine can only quote what it can read as text (appendix concept C).</div><button class="ev-toggle" onclick="tog(this)">Show evidence &#9656;</button><div class="evidence">Only 21 words of visible text in the raw HTML of https://example.com/.</div><div class="fix"><div class="fix-text"><b>Fix (high priority):</b> State plainly in HTML text who the brand is, what it offers, for whom, and where. Every fact that matters must exist as text, not only inside images or video.</div><button class="copy" data-fix="State plainly in HTML text who the brand is, what it offers, for whom, and where. Every fact that matters must exist as text, not only inside images or video." onclick="cp(this)">Copy fix</button></div></div><div class="card" data-gate="engagement" data-sev="medium"><div class="card-head"><span class="pill" style="background:#b8860b">MEDIUM</span><span class="gate-tag">Retain</span><span class="fid">F-ENGAGE-006</span><span class="title">Homepage offers almost no paths deeper into the site</span></div><div class="why"><b>Why it matters:</b> A single-exit page converts an interested visitor into a bounce statistic.</div><button class="ev-toggle" onclick="tog(this)">Show evidence &#9656;</button><div class="evidence">No nav element links and fewer than 5 total links found in homepage markup.</div><div class="fix"><div class="fix-text"><b>Fix (medium priority):</b> Add a simple persistent navigation covering the pages that answer buyer questions: product or services, pricing, about, contact.</div><button class="copy" data-fix="Add a simple persistent navigation covering the pages that answer buyer questions: product or services, pricing, about, contact." onclick="cp(this)">Copy fix</button></div></div><div class="card" data-gate="quotability" data-sev="medium"><div class="card-head"><span class="pill" style="background:#b8860b">MEDIUM</span><span class="gate-tag">Quote</span><span class="fid">F-QUOTE-012</span><span class="title">Probe failed: &#x27;How do I contact them?&#x27; has no extractable answer</span></div><div class="why"><b>Why it matters:</b> A fact that is only in a form or an image cannot be quoted into an answer (appendix concept C).</div><button class="ev-toggle" onclick="tog(this)">Show evidence &#9656;</button><div class="evidence">No phone number, email address, or PostalAddress or ContactPoint schema found in the text of 1 sampled pages. Contact details may exist only inside images, JavaScript widgets, or forms.</div><div class="fix"><div class="fix-text"><b>Fix (medium priority):</b> Publish contact details as selectable HTML text on a /contact page and mirror them in ContactPoint or LocalBusiness JSON-LD.</div><button class="copy" data-fix="Publish contact details as selectable HTML text on a /contact page and mirror them in ContactPoint or LocalBusiness JSON-LD." onclick="cp(this)">Copy fix</button></div></div><div class="card" data-gate="quotability" data-sev="medium"><div class="card-head"><span class="pill" style="background:#b8860b">MEDIUM</span><span class="gate-tag">Quote</span><span class="fid">F-QUOTE-013</span><span class="title">Probe failed: &#x27;Who is behind this brand?&#x27; has no extractable answer</span></div><div class="why"><b>Why it matters:</b> Background facts drive trust in both assistants and humans; when absent, assistants fill the gap from third-party sources or say nothing.</div><button class="ev-toggle" onclick="tog(this)">Show evidence &#9656;</button><div class="evidence">No about page was discoverable from homepage navigation or the sitemap sample, and no founding or team facts appear in sampled text.</div><div class="fix"><div class="fix-text"><b>Fix (medium priority):</b> Add an /about page stating in plain text who runs the brand, since when, where, and what makes it different; link it from the main navigation.</div><button class="copy" data-fix="Add an /about page stating in plain text who runs the brand, since when, where, and what makes it different; link it from the main navigation." onclick="cp(this)">Copy fix</button></div></div><div class="card" data-gate="reach" data-sev="medium"><div class="card-head"><span class="pill" style="background:#b8860b">MEDIUM</span><span class="gate-tag">Reach</span><span class="fid">F-REACH-040</span><span class="title">No usable XML sitemap found</span></div><div class="why"><b>Why it matters:</b> Sitemaps are how crawlers find pages that navigation does not surface, and lastmod is a freshness signal.</div><button class="ev-toggle" onclick="tog(this)">Show evidence &#9656;</button><div class="evidence">Tried https://example.com/sitemap.xml -&gt; HTTP 404; robots.txt declares a sitemap: False.</div><div class="fix"><div class="fix-text"><b>Fix (medium priority):</b> Publish /sitemap.xml with canonical URLs and lastmod dates, and declare it in robots.txt with a Sitemap: line.</div><button class="copy" data-fix="Publish /sitemap.xml with canonical URLs and lastmod dates, and declare it in robots.txt with a Sitemap: line." onclick="cp(this)">Copy fix</button></div></div><div class="card" data-gate="trust" data-sev="medium"><div class="card-head"><span class="pill" style="background:#b8860b">MEDIUM</span><span class="gate-tag">Trust</span><span class="fid">F-TRUST-001</span><span class="title">No machine-readable freshness signal anywhere</span></div><div class="why"><b>Why it matters:</b> Systems prefer sources they can prove are current; with no dates they must assume the worst or trust a fresher competitor.</div><button class="ev-toggle" onclick="tog(this)">Show evidence &#9656;</button><div class="evidence">No datePublished or dateModified in structured data and no lastmod dates in the sitemap across 1 sampled pages.</div><div class="fix"><div class="fix-text"><b>Fix (medium priority):</b> Emit dateModified in Article or WebPage JSON-LD and lastmod in the sitemap, updated by the build pipeline, so machines can see the content is maintained.</div><button class="copy" data-fix="Emit dateModified in Article or WebPage JSON-LD and lastmod in the sitemap, updated by the build pipeline, so machines can see the content is maintained." onclick="cp(this)">Copy fix</button></div></div><div class="card" data-gate="trust" data-sev="medium"><div class="card-head"><span class="pill" style="background:#b8860b">MEDIUM</span><span class="gate-tag">Trust</span><span class="fid">F-TRUST-012</span><span class="title">Site is an island: no links to any off-site brand profile</span></div><div class="why"><b>Why it matters:</b> A claim that exists in exactly one place is fragile; corroboration across independent sources is what makes machines repeat it (appendix concept D).</div><button class="ev-toggle" onclick="tog(this)">Show evidence &#9656;</button><div class="evidence">No links to LinkedIn, Wikipedia, Wikidata, Crunchbase, GitHub or social profiles anywhere in sampled pages, and no sameAs in schema.</div><div class="fix"><div class="fix-text"><b>Fix (medium priority):</b> Link official profiles in the footer and declare them in Organization sameAs. Then keep name, description and address identical across those profiles.</div><button class="copy" data-fix="Link official profiles in the footer and declare them in Organization sameAs. Then keep name, description and address identical across those profiles." onclick="cp(this)">Copy fix</button></div></div></div><div id='empty' class='empty' style='display:none'>No findings match this filter.</div><div class="section">Beyond the defects: proactive improvements</div><ul class="pro"><li><span class="ppri">medium</span>The homepage has no meta description. Add a 150 to 160 character summary stating what the brand is and for whom; assistants and search previews reuse it verbatim.</li><li><span class="ppri">medium</span>No FAQ content or FAQPage schema found. Publishing the 10 questions customers actually ask, each answered in 2 to 4 sentences with FAQPage JSON-LD, creates ready-made citation targets shaped exactly like assistant queries.</li><li><span class="ppri">low</span>No robots.txt found (HTTP 404). Crawlers default to full access, so nothing is blocked, but adding one with a Sitemap line gives crawlers an explicit map and an explicit welcome.</li><li><span class="ppri">low</span>No /llms.txt. This is optional: no major AI provider has confirmed using it, so treat it as a cheap, low-risk curated index for agent tooling, not a fix for visibility problems. Prioritize the actual findings first.</li><li><span class="ppri">low</span>No Open Graph tags on the homepage. Add og:site_name, og:title, og:description and og:image; they are read by far more systems than social networks alone and reinforce the brand entity.</li></ul><div class='foot'>Read-only audit &middot; 1 pages crawled &middot; 4.1s &middot; citation-funnel-audit/1.0.0</div><script id='raw' type='application/json'>{
+  "site": "example.com",
+  "audited_at": "2026-09-03T05:42:34Z",
+  "site_profile": {
+    "site": "example.com",
+    "type": "brochure",
+    "confidence": "low",
+    "commercial": false,
+    "expected_schema": [
+      "Organization"
+    ],
+    "signals": [],
+    "scores": {
+      "ecommerce": 0,
+      "saas": 0,
+      "local_business": 0,
+      "content": 0,
+      "documentation": 0,
+      "portfolio": 0
+    }
+  },
+  "summary": {
+    "total_findings": 8,
+    "critical": 0,
+    "high": 2,
+    "medium": 6,
+    "low": 0
+  },
+  "funnel": [
+    {
+      "stage": "reach",
+      "question": "Reach: can AI crawlers and fetchers get in?",
+      "score": 90,
+      "findings": 1
+    },
+    {
+      "stage": "render",
+      "question": "Read: does the content exist without JavaScript?",
+      "score": 75,
+      "findings": 1
+    },
+    {
+      "stage": "quotability",
+      "question": "Quote: can a machine lift a clean fact?",
+      "score": 55,
+      "findings": 3
+    },
+    {
+      "stage": "trust",
+      "question": "Trust: is it fresh, corroborated, unambiguous?",
+      "score": 80,
+      "findings": 2
+    },
+    {
+      "stage": "engagement",
+      "question": "Retain: does the arriving visitor stay?",
+      "score": 90,
+      "findings": 1
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-QUOTE-002",
+      "title": "No structured data anywhere on sampled pages",
+      "severity": "high",
+      "confidence": "high",
+      "category": "quotability",
+      "mechanism": "Schema markup is how a machine picks the exact fact out of the page without guessing (appendix concepts A and C).",
+      "evidence": "0 JSON-LD blocks and no microdata across 1 pages (https://example.com/).",
+      "suggested_action": {
+        "summary": "Add JSON-LD to every page: Organization (with name, url, logo, sameAs) sitewide, plus the type matching each page (Product with Offer, FAQPage, Article, LocalBusiness).",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "F-RENDER-002",
+      "title": "Homepage has very little machine-readable text",
+      "severity": "high",
+      "confidence": "high",
+      "category": "render",
+      "mechanism": "A machine can only quote what it can read as text (appendix concept C).",
+      "evidence": "Only 21 words of visible text in the raw HTML of https://example.com/.",
+      "suggested_action": {
+        "summary": "State plainly in HTML text who the brand is, what it offers, for whom, and where. Every fact that matters must exist as text, not only inside images or video.",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "F-ENGAGE-006",
+      "title": "Homepage offers almost no paths deeper into the site",
+      "severity": "medium",
+      "confidence": "medium",
+      "category": "engagement",
+      "mechanism": "A single-exit page converts an interested visitor into a bounce statistic.",
+      "evidence": "No nav element links and fewer than 5 total links found in homepage markup.",
+      "suggested_action": {
+        "summary": "Add a simple persistent navigation covering the pages that answer buyer questions: product or services, pricing, about, contact.",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "F-QUOTE-012",
+      "title": "Probe failed: 'How do I contact them?' has no extractable answer",
+      "severity": "medium",
+      "confidence": "medium",
+      "category": "quotability",
+      "mechanism": "A fact that is only in a form or an image cannot be quoted into an answer (appendix concept C).",
+      "evidence": "No phone number, email address, or PostalAddress or ContactPoint schema found in the text of 1 sampled pages. Contact details may exist only inside images, JavaScript widgets, or forms.",
+      "suggested_action": {
+        "summary": "Publish contact details as selectable HTML text on a /contact page and mirror them in ContactPoint or LocalBusiness JSON-LD.",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "F-QUOTE-013",
+      "title": "Probe failed: 'Who is behind this brand?' has no extractable answer",
+      "severity": "medium",
+      "confidence": "medium",
+      "category": "quotability",
+      "mechanism": "Background facts drive trust in both assistants and humans; when absent, assistants fill the gap from third-party sources or say nothing.",
+      "evidence": "No about page was discoverable from homepage navigation or the sitemap sample, and no founding or team facts appear in sampled text.",
+      "suggested_action": {
+        "summary": "Add an /about page stating in plain text who runs the brand, since when, where, and what makes it different; link it from the main navigation.",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "F-REACH-040",
+      "title": "No usable XML sitemap found",
+      "severity": "medium",
+      "confidence": "high",
+      "category": "reach",
+      "mechanism": "Sitemaps are how crawlers find pages that navigation does not surface, and lastmod is a freshness signal.",
+      "evidence": "Tried https://example.com/sitemap.xml -> HTTP 404; robots.txt declares a sitemap: False.",
+      "suggested_action": {
+        "summary": "Publish /sitemap.xml with canonical URLs and lastmod dates, and declare it in robots.txt with a Sitemap: line.",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "F-TRUST-001",
+      "title": "No machine-readable freshness signal anywhere",
+      "severity": "medium",
+      "confidence": "medium",
+      "category": "trust",
+      "mechanism": "Systems prefer sources they can prove are current; with no dates they must assume the worst or trust a fresher competitor.",
+      "evidence": "No datePublished or dateModified in structured data and no lastmod dates in the sitemap across 1 sampled pages.",
+      "suggested_action": {
+        "summary": "Emit dateModified in Article or WebPage JSON-LD and lastmod in the sitemap, updated by the build pipeline, so machines can see the content is maintained.",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "F-TRUST-012",
+      "title": "Site is an island: no links to any off-site brand profile",
+      "severity": "medium",
+      "confidence": "high",
+      "category": "trust",
+      "mechanism": "A claim that exists in exactly one place is fragile; corroboration across independent sources is what makes machines repeat it (appendix concept D).",
+      "evidence": "No links to LinkedIn, Wikipedia, Wikidata, Crunchbase, GitHub or social profiles anywhere in sampled pages, and no sameAs in schema.",
+      "suggested_action": {
+        "summary": "Link official profiles in the footer and declare them in Organization sameAs. Then keep name, description and address identical across those profiles.",
+        "priority": "medium"
+      }
+    }
+  ],
+  "proactive_recommendations": [
+    {
+      "id": "P-QUOTE-001",
+      "summary": "The homepage has no meta description. Add a 150 to 160 character summary stating what the brand is and for whom; assistants and search previews reuse it verbatim.",
+      "priority": "medium"
+    },
+    {
+      "id": "P-QUOTE-002",
+      "summary": "No FAQ content or FAQPage schema found. Publishing the 10 questions customers actually ask, each answered in 2 to 4 sentences with FAQPage JSON-LD, creates ready-made citation targets shaped exactly like assistant queries.",
+      "priority": "medium"
+    },
+    {
+      "id": "P-REACH-002",
+      "summary": "No robots.txt found (HTTP 404). Crawlers default to full access, so nothing is blocked, but adding one with a Sitemap line gives crawlers an explicit map and an explicit welcome.",
+      "priority": "low"
+    },
+    {
+      "id": "P-REACH-004",
+      "summary": "No /llms.txt. This is optional: no major AI provider has confirmed using it, so treat it as a cheap, low-risk curated index for agent tooling, not a fix for visibility problems. Prioritize the actual findings first.",
+      "priority": "low"
+    },
+    {
+      "id": "P-TRUST-001",
+      "summary": "No Open Graph tags on the homepage. Add og:site_name, og:title, og:description and og:image; they are read by far more systems than social networks alone and reinforce the brand entity.",
+      "priority": "low"
+    }
+  ],
+  "audit_meta": {
+    "marketplace": "citation-funnel-audit/1.0.0",
+    "pages_crawled": 1,
+    "crawl_notes": [],
+    "module_stats": {
+      "reach": {
+        "pages_checked": 1
+      },
+      "render": {
+        "pages": [
+          {
+            "url": "https://example.com/",
+            "role": "home",
+            "words_no_js": 21,
+            "html_kb": 1,
+            "scripts": 0
+          }
+        ]
+      },
+      "quotability": {
+        "jsonld_entities": [],
+        "pages_checked": 1,
+        "quotable_paragraphs": 0
+      },
+      "trust": {
+        "jsonld_entities_found": 0,
+        "newest_declared_date": null,
+        "linked_profiles": []
+      },
+      "engagement": {
+        "home_html_kb": 0,
+        "script_tags": 0,
+        "nav_links": 0,
+        "ctas_found": 1
+      }
+    },
+    "elapsed_seconds": 4.1,
+    "read_only": true
+  }
+}</script><script>
+var G='all',S='all';
+function apply(){
+  var shown=0;
+  document.querySelectorAll('.card').forEach(function(c){
+    var ok=(G==='all'||c.dataset.gate===G)&&(S==='all'||c.dataset.sev===S);
+    c.style.display=ok?'':'none'; if(ok)shown++;
+  });
+  document.querySelectorAll('.gate').forEach(function(g){g.classList.toggle('sel',g.dataset.gate===G);});
+  var em=document.getElementById('empty'); if(em)em.style.display=shown?'none':'block';
+}
+function syncChips(){
+  document.querySelectorAll('[data-gchip]').forEach(function(b){b.classList.toggle('active',b.dataset.gchip===G);});
+  document.querySelectorAll('[data-schip]').forEach(function(b){b.classList.toggle('active',b.dataset.schip===S);});
+}
+function setGate(g){G=(G===g?'all':g);syncChips();apply();}
+function setGateChip(g){G=g;syncChips();apply();}
+function setSev(s){S=s;syncChips();apply();}
+function tog(b){var e=b.nextElementSibling;var o=e.classList.toggle('open');b.innerHTML=o?'Hide evidence &#9662;':'Show evidence &#9656;';}
+function done(b){var o=b.textContent;b.textContent='Copied!';b.classList.add('ok');setTimeout(function(){b.textContent=o;b.classList.remove('ok');},1200);}
+function fbk(t,b){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(a);done(b);}
+function cp(b){var t=b.getAttribute('data-fix');if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){done(b);},function(){fbk(t,b);});}else{fbk(t,b);}}
+function dl(){var s=document.getElementById('raw').textContent;var bl=new Blob([s],{type:'application/json'});var u=URL.createObjectURL(bl);var a=document.createElement('a');a.href=u;a.download='audit-report.json';a.click();URL.revokeObjectURL(u);}
+syncChips();apply();
+</script></body></html>

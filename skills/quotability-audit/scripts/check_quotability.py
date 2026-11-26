@@ -166,6 +166,19 @@ def main():
     all_text = " ".join(p for _r, e in pages for p in ([e.title] + e.paragraphs + [t for _l, t in e.headings]))
     urls_checked = [r["final_url"] for r, _e in pages]
 
+    # Everything a visitor can see on the sampled pages, not only <p>/<li>/<h*>
+    # text: prices and contact details usually sit in <div>/<span>. Scripts are
+    # removed so JSON-LD and inline JavaScript never count as visible text.
+    raw_all = ""
+    for rec in manifest.get("pages", []):
+        if rec.get("file"):
+            path = os.path.join(args.cache, rec["file"])
+            if os.path.exists(path):
+                with open(path, encoding="utf-8") as f:
+                    raw_all += f.read()
+    visible = re.sub(r"(?is)<(script|style|template|noscript)[^>]*>.*?</\1>", " ", raw_all)
+    visible = re.sub(r"(?s)<[^>]+>", " ", visible)
+
     # 1. JSON-LD extraction and validation across all pages.
     entities, broken = [], []
     for rec, e in pages:
@@ -270,7 +283,7 @@ def main():
     else:
         commercial = bool(re.search(r"pricing|buy|order|shop|plan|subscribe|book now|add to cart|menu", all_text, re.I)) or "pricing" in roles
     if commercial:
-        price_found = bool(PRICE_RE.search(all_text)) or any("Offer" in str(t) for t in types)
+        price_found = bool(PRICE_RE.search(visible)) or any("Offer" in str(t) for t in types)
         if not price_found:
             findings.append(finding(
                 "F-QUOTE-011", "Probe failed: 'What does it cost?' has no extractable answer", "medium",
@@ -280,13 +293,6 @@ def main():
                 confidence="medium"))
 
     # CONTACT and WHERE: phone, email, or address reachable as text or markup.
-    raw_all = ""
-    for rec in manifest.get("pages", []):
-        if rec.get("file"):
-            path = os.path.join(args.cache, rec["file"])
-            if os.path.exists(path):
-                with open(path, encoding="utf-8") as f:
-                    raw_all += f.read()
     contact_found = bool(PHONE_RE.search(all_text) or EMAIL_RE.search(all_text)) \
         or bool(re.search(r"href=[\"'](tel|mailto):", raw_all, re.I)) \
         or any("PostalAddress" in json.dumps(ent, default=str) for ent in entities) \
@@ -319,14 +325,10 @@ def main():
                 if len(digits) >= 2:
                     schema_prices.append((str(v), digits))
     if schema_prices:
-        # Compare against everything a visitor can see, not only <p>/<li>/<h*>
-        # text (prices usually sit in <div>/<span>), with scripts removed so the
-        # JSON-LD block cannot match itself, and with thousands separators
-        # removed so a displayed "4,573" matches a schema price of 4573.
-        visible = re.sub(r"(?is)<(script|style|template|noscript)[^>]*>.*?</\1>", " ", raw_all)
-        visible = re.sub(r"(?s)<[^>]+>", " ", visible)
-        visible = re.sub(r"(?<=\d),(?=\d)", "", visible)
-        text_digits = re.sub(r"[^\d]", " ", visible)
+        # Compare against the visible text with thousands separators removed, so
+        # a displayed "4,573" matches a schema price of 4573.
+        visible_nocomma = re.sub(r"(?<=\d),(?=\d)", "", visible)
+        text_digits = re.sub(r"[^\d]", " ", visible_nocomma)
         shown = [p for p, d in schema_prices if re.search(r"(?<!\d)%s(?!\d)" % re.escape(d), text_digits)]
         if not shown:
             listed = ", ".join(sorted({p for p, _d in schema_prices}))

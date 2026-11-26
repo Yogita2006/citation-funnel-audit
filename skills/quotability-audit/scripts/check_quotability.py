@@ -319,7 +319,14 @@ def main():
                 if len(digits) >= 2:
                     schema_prices.append((str(v), digits))
     if schema_prices:
-        text_digits = re.sub(r"[^\d]", " ", all_text)
+        # Compare against everything a visitor can see, not only <p>/<li>/<h*>
+        # text (prices usually sit in <div>/<span>), with scripts removed so the
+        # JSON-LD block cannot match itself, and with thousands separators
+        # removed so a displayed "4,573" matches a schema price of 4573.
+        visible = re.sub(r"(?is)<(script|style|template|noscript)[^>]*>.*?</\1>", " ", raw_all)
+        visible = re.sub(r"(?s)<[^>]+>", " ", visible)
+        visible = re.sub(r"(?<=\d),(?=\d)", "", visible)
+        text_digits = re.sub(r"[^\d]", " ", visible)
         shown = [p for p, d in schema_prices if re.search(r"(?<!\d)%s(?!\d)" % re.escape(d), text_digits)]
         if not shown:
             listed = ", ".join(sorted({p for p, _d in schema_prices}))

@@ -1,6 +1,6 @@
 {
   "name": "citation-funnel-audit",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Audits any website through the five-gate pipeline a fact must survive to be cited by an AI assistant (Reach, Read, Quote, Trust) and to keep the visitor who arrives (Retain). Detects the site type first so checks are conditional (a blog is not judged as a store), then emits a single evidence-backed audit report with prioritized fixes.",
   "skills": [
     {

@@ -201,7 +201,7 @@ def main():
         "findings": findings,
         "proactive_recommendations": proactive,
         "audit_meta": {
-            "marketplace": "citation-funnel-audit/1.7.0",
+            "marketplace": "citation-funnel-audit/1.7.1",
             "pages_crawled": len(crawl_manifest.get("pages", [])),
             "crawl_notes": crawl_manifest.get("notes", []),
             "module_stats": module_stats,

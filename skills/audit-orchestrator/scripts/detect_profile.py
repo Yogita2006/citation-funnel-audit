@@ -126,9 +126,15 @@ def detect(manifest, pages):
     # Prices are a strong commercial signal even on a category or landing page,
     # where product/offer schema may be absent. A lone Person node is NOT treated
     # as portfolio evidence (it appears on many sites as bylines or exec bios).
-    price_hits = len(re.findall(r"\u20b9\s?\d|Rs\.?\s?\d|INR\s?\d|\$\s?\d|\u20ac\s?\d|\u00a3\s?\d|\bMRP\b", all_text, re.I))
+    # Word boundaries matter: without them "Rs" also matches inside ordinary words
+    # ("editors 2", "years 20"), which once classified wikipedia.org as a store.
+    price_hits = len(re.findall(r"\u20b9\s?\d|\bRs\.?\s?\d|\bINR\s?\d|\$\s?\d|\u20ac\s?\d|\u00a3\s?\d|\bMRP\b", all_text, re.I))
     if price_hits:
-        scores["ecommerce"] += min(price_hits, 3)
+        # A few prices appear on almost any site, so on their own they stay below
+        # the classification threshold (3). Dense pricing (10+) is what a
+        # storefront looks like, even when its cart and product pages are
+        # disallowed by robots.txt and never crawled.
+        scores["ecommerce"] += 5 if price_hits >= 10 else min(price_hits, 2)
         signals.append("price signals -> ecommerce (x%d)" % price_hits)
 
     best = max(scores, key=lambda k: scores[k])

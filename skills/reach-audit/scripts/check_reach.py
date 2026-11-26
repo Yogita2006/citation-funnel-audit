@@ -81,6 +81,17 @@ def main():
             "GET %s failed: %s" % (m.get("start_url"), (home or {}).get("error", "no response")),
             "Make the homepage return HTTP 200 over HTTPS for standard clients; check DNS, TLS certificate, and any bot-blocking WAF rules.",
             "A crawler that cannot fetch the page cannot index or cite anything on it (appendix concept A)."))
+    elif home.get("status") in (401, 403, 429, 503):
+        # A refusal aimed at this audit's own request. It proves the site turns
+        # away unrecognised automated clients; it does not prove that named AI
+        # crawlers are refused, so it is reported with low confidence.
+        findings.append(finding(
+            "F-REACH-003", "Site refused the audit's request (HTTP %s)" % home.get("status"), "high",
+            "GET %s -> %s (final URL %s). This is typically bot protection (a WAF or CDN rule) answering an unrecognised client. The audit could not read any page, and it cannot tell from here whether AI retrieval bots are refused the same way." % (
+                home["url"], home.get("status"), home.get("final_url")),
+            "Check the bot-protection rules: confirm that the AI retrieval and user-fetch agents you want (for example OAI-SearchBot, PerplexityBot, ChatGPT-User, Claude-User) are allow-listed, and verify with their published user agents or IP ranges.",
+            "Bot protection that blocks unknown clients often blocks AI fetchers too; an assistant that gets a 403 has nothing to quote (appendix concept A).",
+            confidence="low"))
     elif home.get("status") != 200:
         findings.append(finding(
             "F-REACH-002", "Homepage returns HTTP %s" % home.get("status"), "critical",
@@ -127,6 +138,11 @@ def main():
                 "id": "P-REACH-001",
                 "summary": "Training bots (%s) are blocked while retrieval bots are allowed. This is a coherent policy; just confirm it is intentional, since it trades long-term model familiarity with the brand for content control." % ", ".join(sorted(blocked_training)),
                 "priority": "low"})
+    elif robots.get("status") in (401, 403, 429):
+        proactive.append({
+            "id": "P-REACH-005",
+            "summary": "robots.txt could not be read (HTTP %s): the site refused the request, so its crawler policy is unknown rather than absent. Make /robots.txt readable by every client, including ones your bot protection does not recognise." % robots.get("status"),
+            "priority": "medium"})
     else:
         proactive.append({
             "id": "P-REACH-002",

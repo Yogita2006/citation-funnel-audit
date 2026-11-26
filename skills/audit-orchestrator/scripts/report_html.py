@@ -111,13 +111,17 @@ def render_html(report):
     for st in report.get("funnel", []):
         stage = st.get("stage", "")
         label = LABEL.get(stage, stage.title())
-        score = int(st.get("score", 0))
+        # A gate that could not be evaluated (unreachable site) has score None:
+        # show N/A with an empty bar instead of a misleading number.
+        raw_score = st.get("score")
+        score = 0 if raw_score is None else int(raw_score)
+        shown = "N/A" if raw_score is None else str(score)
         fbits.append(
             '<button class="gate" data-gate="%s" onclick="setGate(\'%s\')">'
-            '<div class="gate-top"><span class="gate-name">%s</span><span class="gate-score">%d</span></div>'
+            '<div class="gate-top"><span class="gate-name">%s</span><span class="gate-score">%s</span></div>'
             '<div class="bar"><div class="bar-fill" style="width:%d%%;background:%s"></div></div>'
             '<div class="gate-q">%s</div></button>'
-            % (stage, stage, label, score, score, score_color(score), e(st.get("question", "")))
+            % (stage, stage, label, shown, score, score_color(score), e(st.get("question", "")))
         )
 
     gate_chips = ['<button class="chip active" data-gchip="all" onclick="setGateChip(\'all\')">All gates</button>']
@@ -228,8 +232,9 @@ def render_compare(a, b, label_a=None, label_b=None):
     e = _html.escape
     la = e(label_a or a.get("site") or "Site A")
     lb = e(label_b or b.get("site") or "Site B")
-    sa = {st.get("stage"): int(st.get("score", 0)) for st in a.get("funnel", [])}
-    sb = {st.get("stage"): int(st.get("score", 0)) for st in b.get("funnel", [])}
+    # An unevaluated gate (score None, unreachable site) counts as 0 in a comparison.
+    sa = {st.get("stage"): int(st.get("score") or 0) for st in a.get("funnel", [])}
+    sb = {st.get("stage"): int(st.get("score") or 0) for st in b.get("funnel", [])}
     stages = [st.get("stage") for st in a.get("funnel", [])] or list(sa.keys())
 
     def overall(sc):

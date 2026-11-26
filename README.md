@@ -42,6 +42,42 @@ address and opening hours that "near me" answers depend on. Getting the site
 type wrong is the fastest way to generate false positives, so this step runs
 first and feeds all five gates.
 
+## Design decisions and trade-offs
+
+A frontier model, given this brief, produces a flat checklist of common SEO/GEO
+issues — that is the baseline every submission shares. The decisions below are
+the layer added on top of that baseline; each was a deliberate choice with a
+trade-off.
+
+- **A funnel, not a list.** Findings are organised into five ordered gates a
+  fact must survive to be cited (Reach, Read, Quote, Trust, Retain), each scored
+  0-100. This turns "47 issues" into "the site drops out at Read", so the owner
+  fixes the one gate that unblocks the rest. Trade-off: a fact can touch two
+  gates, so each finding is attributed to the gate whose failure is the true cause.
+- **Site-type detection over one checklist.** The site is classified and every
+  check is made conditional on its type, so the tool generalises across verticals
+  instead of over-fitting to specific sites. Trade-off: a hybrid site (blog plus
+  store) is scored by its dominant type; the universal checks still run, so
+  nothing is skipped, only some type-specific extras.
+- **Priority and mechanism over volume.** Every finding carries a severity, a
+  priority, and a one-line mechanism explaining why it matters in terms of how
+  crawlers and assistants behave. Ranking by impact is what separates a useful
+  report from a laundry list.
+- **Say less, mean more.** A dedicated judgment pass exists to drop and downgrade
+  false positives (a consulting firm with no price is not broken). The tool is
+  tuned to under-report rather than over-report, because a false positive costs
+  more credibility than a miss.
+- **Recommend, never edit.** The output is an evidence-backed recommendation
+  report; the marketplace never changes a live site, and assumes a downstream
+  agent would apply any fix.
+- **One crawl, shared by all gates.** The site is fetched once into a shared
+  snapshot that all five gates read, cutting requests roughly five-fold and
+  guaranteeing every gate reasons about the same bytes.
+- **Restraint over volume.** The marketplace is six focused skills on the Python
+  standard library — no browser automation, no third-party packages, nothing
+  bundled that a static, one-pass audit cannot use. Doing less, deliberately,
+  keeps it fast, portable, and easy for an evaluator to reason about.
+
 ## Layout
 
 ```
@@ -53,9 +89,6 @@ citation-funnel-audit/
       scripts/crawl_site.py      polite read-only crawler (shared snapshot)
       scripts/detect_profile.py  site-type detection (writes profile.json)
       scripts/run_audit.py       pipeline runner and report merger
-      scripts/report_html.py     interactive self-contained HTML report
-      scripts/serve.py           local web UI (stdlib http.server)
-      scripts/compare.py         side-by-side comparison of two sites
       references/                report schema, judgment guide, off-site probe
     reach-audit/                 gate 1: robots policy per AI agent class,
       SKILL.md, scripts/, references/    HTTP health, noindex, sitemap
@@ -125,45 +158,35 @@ citation-funnel-audit/
 `confidence`, `category`, and `mechanism` (one sentence on why the problem
 matters in terms of how these systems behave). Added globally: the per-stage
 `funnel` scores and `proactive_recommendations`, improvements beyond detected
-defects, kept separate so they never inflate the findings count. `--markdown`
-renders a human-readable version of the same report, and `--html` an
-interactive dashboard, both generated from the one report object.
+defects, kept separate so they never inflate the findings count.
 
 ## Running it
 
 ```
 cd skills/audit-orchestrator
-python3 scripts/run_audit.py example.com --out audit-report.json --markdown audit-report.md --html audit-report.html
+python3 scripts/run_audit.py example.com --out audit-report.json --markdown audit-report.md
 ```
 
 Python 3.8+ standard library only; no packages to install. A typical audit
 finishes in 30 to 90 seconds, well inside the 5 minute budget.
 
-`--html` writes a single self-contained interactive dashboard (no external
-assets, no server): tap a funnel gate or a severity chip to filter findings,
-expand the evidence behind any finding, copy a fix, or download the raw JSON.
-It opens directly in a browser.
+## Dashboard, local web UI and compare mode
 
-For a browser-driven flow, run the local web UI and audit from a page:
+All three run the same audit engine and need no extra packages.
 
 ```
-cd skills/audit-orchestrator
+# interactive single-file HTML dashboard
+python3 scripts/run_audit.py example.com --out audit-report.json --html audit-report.html
+
+# local web UI: type a URL in the browser (binds to 127.0.0.1 only)
 python3 scripts/serve.py            # then open http://127.0.0.1:8000
-```
 
-Enter a URL, click Audit, and the same dashboard renders in place. It binds to
-localhost only, uses Python's built-in http.server (still no dependencies), and
-runs the same engine as the CLI.
-
-Compare two sites (yours vs a competitor) from the command line:
-
-```
-cd skills/audit-orchestrator
+# two sites side by side
 python3 scripts/compare.py your-site.com competitor.com --out compare.html
 ```
 
-or use the "Compare two" tab in the web UI. The comparison puts both sites'
-funnel scores side by side and calls out the biggest gap between them.
+A gate that could not be evaluated because the site was unreachable is shown
+as N/A in the dashboard and counts as 0 in a comparison.
 
 ## Guardrails
 

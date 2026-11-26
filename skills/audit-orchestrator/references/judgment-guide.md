@@ -25,6 +25,46 @@ before including it. False positives cost more credibility than misses.
 - Blocked training bots only (GPTBot, ClaudeBot, Google-Extended): never a
   defect. It is a policy trade-off and stays in proactive notes.
 
+## More false-positive scenarios (worked examples)
+
+These are the calls that most often separate a careful audit from a noisy one.
+Each names the finding, the situation, and the correct judgment.
+
+- F-QUOTE-030 (schema price not in visible text): on many stores the price is
+  rendered per variant by JavaScript, or shown inside a promotional image, while
+  the JSON-LD price is correct. Before calling it a mismatch, check a product
+  page: if the price simply loads client-side, this is a render-parity note
+  (expose the price as text), not a contradiction. Only report a true mismatch
+  when a different number is visible.
+- F-QUOTE-005 (missing the schema this site type needs): a brand-new store, or a
+  site on a platform that has not enabled Product schema, can still list products
+  and prices in plain text. Keep the finding, but at medium — the facts are
+  quotable even without schema; schema would only make them lift more cleanly.
+- F-REACH-050 (login or paywall): a SaaS product legitimately gates its app at
+  /app or /dashboard while its marketing, pricing, and docs pages stay open.
+  Gating the product is not a visibility defect. Report this only when the wall
+  sits in front of content that should be public (marketing, pricing, articles).
+- F-QUOTE-006 (local business missing hours): appointment-only and always-open
+  businesses may have no fixed hours. Look for "by appointment", "24/7", or
+  "open 24 hours" in the text before flagging; if present, drop the hours part
+  and keep only address / NAP.
+- F-RENDER-013 (load-more or infinite scroll): a blog or catalogue index that
+  loads older items on scroll is fine if each item has its own crawlable URL and
+  appears in the sitemap. Verify the sitemap first; if items are individually
+  reachable, downgrade to a low-severity note about the index page only.
+- F-ENGAGE-008 (key page not linked from the homepage): the homepage nav may be
+  a JavaScript mega-menu the static parser cannot expand, so a "missing" link is
+  not proof of a buried page. Confirm the link truly is absent (check the raw
+  HTML and the footer) before reporting; when in doubt, downgrade.
+- Freshness on evergreen pages (F-TRUST-*): an About, contact, or legal page
+  unchanged for years is not stale, and a footer copyright year is often a
+  template. Reserve the stale-content flag for pages whose value depends on
+  recency — pricing, product, and news — not for evergreen pages.
+- Entity identity (legal vs brand name): a footer or schema reading "Acme
+  Technologies Pvt Ltd" while the title says "Acme" is normal legal-vs-brand
+  naming, not a name conflict. Flag only genuinely different names that a machine
+  could not reconcile.
+
 ## Rules for your own additions
 
 You may add findings the scripts cannot see (for example, obviously

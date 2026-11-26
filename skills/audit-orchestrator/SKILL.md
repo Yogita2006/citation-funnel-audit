@@ -18,6 +18,20 @@ unambiguous) -> Retain (the human who clicks through stays).
 Each gate is a sibling skill in this marketplace. This skill composes them and
 emits the one final report.
 
+## Design principles
+
+- Generalizes across verticals. Every check encodes a general best practice and
+  is conditioned on the detected site type (ecommerce, SaaS, local business,
+  content, documentation, portfolio, brochure), never tuned to specific URLs, so
+  it holds on unseen sites in any industry.
+- Priority over volume. Findings are ranked by severity and real-world impact so
+  the change that moves brand visibility most is first, not a flat laundry list.
+- Recommend, never edit. The output is an evidence-backed recommendation report;
+  the marketplace never alters a live site.
+- Portable and lightweight. Pure Python standard library, no third-party
+  packages, and provider-agnostic: no dependence on any specific model, API, or
+  hosted tool.
+
 ## When to use
 
 The user asks to audit a website or brand for AI discoverability or visibility,
@@ -63,8 +77,8 @@ arrive do not engage.
    search tool exists; the report is complete without it.
 
 5. Present the result: lead with the funnel table (where the site drops out),
-   then findings ordered by severity with evidence and fix, then the proactive
-   recommendations. The JSON report is the contract; the markdown file is the
+   then findings ordered by severity and priority (highest-impact first) with
+   evidence and fix, then the proactive recommendations. The JSON report is the contract; the markdown file is the
    readable version for a non-expert.
 
 ## Output

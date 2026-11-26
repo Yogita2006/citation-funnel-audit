@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import re
+import urllib.parse
 import sys
 from html.parser import HTMLParser
 
@@ -187,12 +188,20 @@ def main():
             "Facts locked inside pixels are invisible to text extraction; alt text and parallel HTML text are the machine-readable copy (appendix concept C).",
             confidence="high"))
 
-    # 4. Critical info behind PDFs.
+    # 4. Critical info behind PDFs. Only PDFs hosted on this site count — an
+    # outbound PDF citation to another domain is a reference, not hidden content.
+    def _host(u):
+        h = (urllib.parse.urlsplit(u).netloc or "").lower()
+        return h[4:] if h.startswith("www.") else h
     pdf_links = []
     for rec, html in pages:
+        page_host = _host(rec.get("final_url") or "")
         for href, text in parse_page(html).links:
-            if re.search(r"\.pdf($|\?)", href or "", re.I) and re.search(
-                    r"menu|price|pricing|brochure|catalog|spec|rate", (href or "") + " " + (text or ""), re.I):
+            if not (re.search(r"\.pdf($|\?)", href or "", re.I) and re.search(
+                    r"menu|price|pricing|brochure|catalog|spec|rate", (href or "") + " " + (text or ""), re.I)):
+                continue
+            ph = _host(urllib.parse.urljoin(rec.get("final_url") or "", href or ""))
+            if page_host and ph and (ph == page_host or ph.endswith("." + page_host) or page_host.endswith("." + ph)):
                 pdf_links.append((href, text.strip()[:40]))
     if pdf_links:
         findings.append(finding(

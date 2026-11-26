@@ -39,6 +39,7 @@ class Extractor(HTMLParser):
         self.metas = {}
         self.headings = []          # (level, text)
         self.paragraphs = []
+        self.prose = []             # <p> only, for the self-description probe
         self.jsonld_raw = []
         self.has_microdata = False
         self._mode = []             # tag context stack
@@ -81,6 +82,8 @@ class Extractor(HTMLParser):
                         self.headings.append((mode, text))
                     else:
                         self.paragraphs.append(text)
+                        if mode == "p":
+                            self.prose.append(text)
             self._buf = None
 
     def handle_data(self, data):
@@ -248,7 +251,10 @@ def main():
     # WHAT: does the homepage state what the brand is in plain text?
     h1_text = " ".join(t for l, t in home_e.headings if l == "h1")
     meta_desc = home_e.metas.get("description", "")
-    first_paras = " ".join(home_e.paragraphs[:3])
+    # Prefer real <p> prose; list items (nav/sidebar) are not a self-description,
+    # so a page whose menu precedes its lead paragraph is not falsely flagged.
+    prose = home_e.prose or home_e.paragraphs
+    first_paras = " ".join(prose[:3])
     what_material = (h1_text + " " + meta_desc + " " + first_paras).strip()
     if len(what_material.split()) < 12:
         findings.append(finding(

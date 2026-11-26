@@ -6,7 +6,7 @@ high-value internal pages (about, pricing, contact, product, faq, blog),
 then writes everything to a cache directory that the analysis modules read.
 
 Read-only by design: GET requests only, custom identifying user agent,
-honors robots.txt rules for '*', fixed politeness delay, hard time budget.
+honors robots.txt rules for its own name or '*', fixed politeness delay, hard time budget.
 Python 3.8+ standard library only.
 """
 
@@ -25,6 +25,7 @@ from html.parser import HTMLParser
 
 USER_AGENT = "CitationFunnelAudit/1.0 (read-only site audit; respects robots.txt)"
 FETCH_TIMEOUT = 12
+ROBOTS_AGENT = "citationfunnelaudit"
 POLITENESS_DELAY = 0.6
 TIME_BUDGET_SECONDS = 120
 
@@ -280,7 +281,10 @@ def main():
     def may_fetch(url):
         if not robots_parsed:
             return True
-        return allowed_by_robots(robots_parsed, urllib.parse.urlsplit(url).path or "/", "*")
+        sp = urllib.parse.urlsplit(url)
+        robots_path = (sp.path or "/") + (("?" + sp.query) if sp.query else "")
+        # Obey a group written for this tool by name; falls back to '*' otherwise.
+        return allowed_by_robots(robots_parsed, robots_path, ROBOTS_AGENT)
 
     # 2. homepage
     home = fetch(start_url)
@@ -339,9 +343,17 @@ def main():
             manifest["notes"].append("time budget reached; stopped after %d pages" % i)
             break
         if not may_fetch(page["url"]):
-            manifest["notes"].append("skipped (robots disallow for *): " + page["url"])
+            manifest["notes"].append("skipped (robots disallow): " + page["url"])
             continue
         rec = fetch(page["url"])
+        # robots.txt also governs the redirect target: a page that redirects to a
+        # disallowed URL (e.g. an account link landing on /login?) must not be
+        # saved just because the initial URL was allowed.
+        final = rec.get("final_url") or page["url"]
+        if final != page["url"] and not may_fetch(final):
+            manifest["notes"].append("skipped (redirected to robots-disallowed): " + final)
+            time.sleep(POLITENESS_DELAY)
+            continue
         save_page(rec, "page_%03d_%s" % (i, page["role"]), page["role"])
         time.sleep(POLITENESS_DELAY)
 

@@ -12,6 +12,7 @@ import datetime
 import json
 import os
 import re
+import urllib.parse
 import sys
 
 # AI crawler user agents by function. Blocking the retrieval or user-fetch
@@ -155,15 +156,30 @@ def main():
             "AI fetchers arrive unauthenticated; anything visible only after sign-in or payment is invisible to them and gets attributed to whoever published it in the open (appendix concept A).",
             confidence="medium"))
 
-    # 3. noindex directives on fetched pages.
+    # 3. noindex directives on fetched pages. A noindex on a non-canonical alias
+    # (its canonical points to a different URL) is correct deduplication, not a
+    # defect, so those pages are skipped.
+    def _norm_url(u):
+        try:
+            s = urllib.parse.urlsplit((u or "").strip())
+            return (s.netloc or "").lower().replace("www.", "") + (s.path or "/").rstrip("/")
+        except Exception:
+            return (u or "").strip().rstrip("/")
+
     for rec in origin_pages:
         html = read_page(args.cache, rec)
         if not html:
             continue
+        if rec.get("status") != 200:
+            continue  # noindex on a 4xx/5xx block page is not a real directive
         header_robots = (rec.get("headers") or {}).get("x-robots-tag", "")
         meta_noindex = re.search(
             r"<meta[^>]+name=[\"']robots[\"'][^>]+content=[\"'][^\"']*noindex", html, re.I)
         if "noindex" in header_robots.lower() or meta_noindex:
+            page_url = rec.get("final_url") or rec.get("url") or ""
+            canon = re.findall(r"<link[^>]+rel=[\"']canonical[\"'][^>]*href=[\"']([^\"']+)", html, re.I)
+            if canon and _norm_url(urllib.parse.urljoin(page_url, canon[0])) != _norm_url(page_url):
+                continue  # non-canonical alias; noindex here is correct deduplication
             sev = "critical" if rec.get("role") == "home" else "high"
             where = "X-Robots-Tag header" if "noindex" in header_robots.lower() else "meta robots tag"
             findings.append(finding(

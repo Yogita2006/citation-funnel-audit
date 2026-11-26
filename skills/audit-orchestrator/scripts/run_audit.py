@@ -88,16 +88,22 @@ def to_markdown(report):
         lines += ["Detected site type: **%s** (%s confidence). Checks are tuned to this type."
                   % (prof["type"], prof.get("confidence", "low")), ""]
     lines += ["## Where the site falls out of the funnel", ""]
+    if any(s.get("score") is None for s in report["funnel"]):
+        lines += ["_Site unreachable: no page returned HTTP 200, so only the Reach gate could be "
+                  "evaluated; the content gates are marked N/A rather than scored._", ""]
     for stage in report["funnel"]:
-        bar = "#" * (stage["score"] // 10) + "." * (10 - stage["score"] // 10)
-        lines.append("- `%s` %3d/100  %s" % (bar, stage["score"], stage["question"]))
+        sc = stage.get("score")
+        bar = ("." * 10) if sc is None else ("#" * (sc // 10) + "." * (10 - sc // 10))
+        label = "   N/A " if sc is None else "%3d/100" % sc
+        lines.append("- `%s` %s  %s" % (bar, label, stage["question"]))
     lines += ["", "## Findings (highest impact first)", ""]
     for f in report["findings"]:
-        lines += ["### %s  [%s] %s" % (f["id"], f["severity"].upper(), f["title"]),
-                  "", "Evidence: %s" % f["evidence"], "",
-                  "Why it matters: %s" % f.get("mechanism", ""), "",
-                  "Fix (%s priority): %s" % (f["suggested_action"]["priority"],
-                                             f["suggested_action"]["summary"]), ""]
+        lines += ["### %s — %s" % (f["id"], f["title"]), "",
+                  "**Severity:** %s" % f["severity"].capitalize(), "",
+                  "**Evidence:** %s" % f["evidence"], "",
+                  "**Why it matters:** %s" % f.get("mechanism", ""), "",
+                  "**Fix (priority %s):** %s" % (f["suggested_action"]["priority"],
+                                                 f["suggested_action"]["summary"]), ""]
     if report.get("proactive_recommendations"):
         lines += ["## Beyond the defects: proactive improvements", ""]
         for p in report["proactive_recommendations"]:
@@ -150,6 +156,14 @@ def main():
               file=sys.stderr)
 
     # 2. Run every analysis module.
+    # A site is "reachable" only if at least one crawled page returned HTTP 200.
+    # When it is not, the four content gates (Read/Quote/Trust/Retain) have no
+    # page text to judge, so they are marked N/A rather than scored 100 (which
+    # would read as a clean pass). Reach still scores, because it evaluates
+    # robots, status and sitemap without needing page content. Reachable sites
+    # always have the 200 homepage, so this never affects them.
+    reachable = any(p.get("status") == 200 for p in crawl_manifest.get("pages", []))
+    CONTENT_GATES = {"render", "quotability", "trust", "engagement"}
     findings, proactive, funnel, module_stats = [], [], [], {}
     for stage_key, question in FUNNEL_STAGES:
         skill_id, rel = MODULES[stage_key]
@@ -158,9 +172,13 @@ def main():
         findings += stage_findings
         proactive += result.get("proactive", [])
         module_stats[stage_key] = result.get("stats", {})
-        funnel.append({"stage": stage_key, "question": question,
-                       "score": stage_score(stage_findings),
-                       "findings": len(stage_findings)})
+        entry = {"stage": stage_key, "question": question, "findings": len(stage_findings)}
+        if not reachable and stage_key in CONTENT_GATES:
+            entry["score"] = None
+            entry["note"] = "not evaluated: site unreachable (no page returned HTTP 200)"
+        else:
+            entry["score"] = stage_score(stage_findings)
+        funnel.append(entry)
         print("module %-12s findings=%d" % (stage_key, len(stage_findings)), file=sys.stderr)
 
     # 3. Merge deterministically: severity first, then stable id.
@@ -183,7 +201,7 @@ def main():
         "findings": findings,
         "proactive_recommendations": proactive,
         "audit_meta": {
-            "marketplace": "citation-funnel-audit/1.0.0",
+            "marketplace": "citation-funnel-audit/1.7.0",
             "pages_crawled": len(crawl_manifest.get("pages", [])),
             "crawl_notes": crawl_manifest.get("notes", []),
             "module_stats": module_stats,
@@ -197,6 +215,7 @@ def main():
     if args.markdown:
         with open(args.markdown, "w", encoding="utf-8") as f:
             f.write(to_markdown(report))
+
     if args.html:
         sys.path.insert(0, here)
         from report_html import render_html

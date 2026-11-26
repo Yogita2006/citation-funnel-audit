@@ -43,7 +43,7 @@ OG_TYPE_RE = re.compile(r'<meta[^>]+property=["\']og:type["\'][^>]+content=["\']
 
 # On-page vocabulary that signals each site type.
 VOCAB = {
-    "ecommerce": r"add to cart|add to basket|add to bag|proceed to checkout|\bcheckout\b|buy now|in stock|out of stock|free shipping|free delivery|shopping cart|view cart",
+    "ecommerce": r"add to cart|add to basket|add to bag|proceed to checkout|\bcheckout\b|buy now|in stock|out of stock|free shipping|free delivery|shopping cart|view cart|shopping bag|my bag|wishlist|select size|size chart|size guide",
     "saas": r"free trial|start free|sign up free|get started free|per month|per user|/mo\b|pricing plans|book a demo|request a demo|integrations|single sign-on|\bSSO\b|api key",
     "local_business": r"opening hours|open today|book a table|make a reservation|reservations|get directions|our location|visit us|walk-ins|order for pickup|dine-in",
     "content": r"read more|continue reading|posted on|published on|min read|minute read|subscribe to (our )?newsletter|latest posts|recent posts|categories|\btags\b",
@@ -65,7 +65,7 @@ SCHEMA_TYPES = {
                        "professionalservice", "medicalbusiness", "lodgingbusiness"},
     "content": {"article", "blogposting", "newsarticle", "blog", "liveblogposting"},
     "documentation": {"techarticle", "apireference", "howto"},
-    "portfolio": {"person", "profilepage", "creativework"},
+    "portfolio": {"profilepage", "creativework"},
 }
 EXPECTED_SCHEMA = {
     "ecommerce": ["Product", "Offer", "Organization"],
@@ -122,6 +122,14 @@ def detect(manifest, pages):
         if n:
             scores[typ] += min(n, 4)
             signals.append("text vocab -> %s (x%d)" % (typ, n))
+
+    # Prices are a strong commercial signal even on a category or landing page,
+    # where product/offer schema may be absent. A lone Person node is NOT treated
+    # as portfolio evidence (it appears on many sites as bylines or exec bios).
+    price_hits = len(re.findall(r"\u20b9\s?\d|Rs\.?\s?\d|INR\s?\d|\$\s?\d|\u20ac\s?\d|\u00a3\s?\d|\bMRP\b", all_text, re.I))
+    if price_hits:
+        scores["ecommerce"] += min(price_hits, 3)
+        signals.append("price signals -> ecommerce (x%d)" % price_hits)
 
     best = max(scores, key=lambda k: scores[k])
     top = scores[best]

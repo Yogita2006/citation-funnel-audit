@@ -161,7 +161,7 @@ Step 1: You give one website address.
 
 ```
 cd skills/audit-orchestrator
-python3 scripts/run_audit.py example.com --out report.json --markdown report.md --html report.html
+python3 scripts/run_audit.py example.com --out report.json --markdown report.md
 ```
 
 Step 2: The crawler (crawl_site.py) visits the site once, politely:
@@ -184,29 +184,6 @@ door a score out of 100, and writes the final report:
 - report.json: the structured report (matches the hackathon's required format,
   plus extra useful fields).
 - report.md: the same report in a human-friendly page with the funnel chart.
-- report.html (optional, with --html): an interactive dashboard you open in a
-  browser. Tap a gate to filter findings, expand evidence, copy a fix, or
-  download the JSON. Still one file, still zero dependencies.
-
-Optional web UI: instead of the command line, run a local page and audit from
-the browser:
-
-```
-cd skills/audit-orchestrator
-python3 scripts/serve.py
-```
-
-Then open http://127.0.0.1:8000, type a URL, and click Audit. It uses Python's
-built-in web server (no Flask, no installs), runs on your machine only, and
-shows the same dashboard.
-
-Compare mode: audit two sites at once and see their scores side by side, with
-the "Compare two" tab in the web UI or from the command line:
-
-```
-cd skills/audit-orchestrator
-python3 scripts/compare.py your-site.com competitor.com --out compare.html
-```
 
 Step 5 (agent step): the AI agent running the skill reviews every finding
 against the evidence and removes anything that does not fit the site's

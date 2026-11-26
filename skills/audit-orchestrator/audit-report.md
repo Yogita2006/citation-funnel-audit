@@ -1,6 +1,6 @@
 # Citation Funnel Audit: python.org
 
-Audited at 2026-11-26T16:19:30Z. 4 findings (0 critical, 0 high, 4 medium, 0 low).
+Audited at 2026-11-26T17:01:38Z. 4 findings (0 critical, 0 high, 4 medium, 0 low).
 
 Detected site type: **content** (medium confidence). Checks are tuned to this type.
 

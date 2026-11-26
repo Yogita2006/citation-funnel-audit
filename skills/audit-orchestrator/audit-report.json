@@ -1,6 +1,6 @@
 {
   "site": "python.org",
-  "audited_at": "2026-11-26T16:19:30Z",
+  "audited_at": "2026-11-26T17:01:38Z",
   "site_profile": {
     "site": "python.org",
     "type": "content",
@@ -137,7 +137,7 @@
     }
   ],
   "audit_meta": {
-    "marketplace": "citation-funnel-audit/1.7.0",
+    "marketplace": "citation-funnel-audit/1.7.1",
     "pages_crawled": 9,
     "crawl_notes": [],
     "module_stats": {
@@ -149,7 +149,7 @@
           {
             "url": "https://www.python.org/",
             "role": "home",
-            "words_no_js": 1089,
+            "words_no_js": 1100,
             "html_kb": 51,
             "scripts": 7
           },
@@ -237,7 +237,7 @@
         "ctas_found": 5
       }
     },
-    "elapsed_seconds": 15.8,
+    "elapsed_seconds": 13.7,
     "read_only": true
   }
 }

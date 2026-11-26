@@ -183,13 +183,14 @@ def main():
                 len(broken), broken[0][0], broken[0][1]),
             "Fix the JSON syntax (validate with schema.org validator or 'python3 -m json.tool') and add a JSON-LD lint step to the site build.",
             "Structured data is the highest-precision channel for facts; a syntax error silently zeroes it."))
-    if not entities and not any(e.has_microdata for _r, e in pages):
+    has_structured = bool(entities) or any(e.has_microdata for _r, e in pages)
+    if not has_structured and not broken:
         findings.append(finding(
             "F-QUOTE-002", "No structured data anywhere on sampled pages", "high",
             "0 JSON-LD blocks and no microdata across %d pages (%s)." % (len(pages), ", ".join(urls_checked[:4])),
             "Add JSON-LD to every page: Organization (with name, url, logo, sameAs) sitewide, plus the type matching each page (Product with Offer, FAQPage, Article, LocalBusiness).",
             "Schema markup is how a machine picks the exact fact out of the page without guessing (appendix concepts A and C)."))
-    else:
+    elif has_structured:
         if not any("Organization" in t or "LocalBusiness" in t for t in types):
             findings.append(finding(
                 "F-QUOTE-003", "No Organization or LocalBusiness entity declared", "medium",

@@ -58,7 +58,7 @@ arrive do not engage.
    can make its checks conditional. It then locates the sibling skills through
    `marketplace.json`, runs each gate's check script against the same cached
    snapshot, deduplicates, sorts by severity then id, and writes the report
-   (which includes the detected `site_profile`). Typical runtime is 30 to 90
+   (which includes the detected `site_profile`). Typical runtime is under 60
    seconds.
 
 2. Read `audit-report.json` and verify it is well formed: `site`, `audited_at`,

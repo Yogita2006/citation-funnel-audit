@@ -168,7 +168,38 @@ python3 scripts/run_audit.py example.com --out audit-report.json --markdown audi
 ```
 
 Python 3.8+ standard library only; no packages to install. A typical audit
-finishes in 30 to 90 seconds, well inside the 5 minute budget.
+finishes in under 60 seconds, well inside the 5 minute budget.
+
+## Measured runtime
+
+Measured on 26 November 2026 with v1.7.1 and the default `--max-pages 8`.
+
+| Site | Pages crawled | Seconds |
+| --- | --- | --- |
+| python.org | 9 | 13.7 |
+| amazon.in | 7 | 19 |
+| flipkart.com | 4 | 14 |
+| wikipedia.org | 1 | 7 |
+| servicenow.com | 1 (refused, HTTP 403) | 8 |
+| leetcode.com | 1 (refused, HTTP 403) | 11 |
+
+Most of the time is deliberate: the crawl makes about 13 requests with a
+0.6 second politeness pause after each, and the five gates together take about
+a second. Slow sites take longer; the crawl stops itself at 120 seconds.
+
+## Known limitations
+
+- The checks are heuristics based on how AI fetchers work. They are not
+  validated against real citation data.
+- The audit samples the homepage plus up to 8 pages, as raw HTML only. Two
+  crawls of a large live site can sample different pages and give different
+  findings.
+- A subdomain counts as a different site, so a portal page such as
+  wikipedia.org yields a single page.
+- A site that refuses the audit's request (HTTP 403) is reported as a refusal
+  with low confidence; it does not prove that named AI bots are refused too.
+- The Reach gate detects full-site bot blocks (`Disallow: /`), not partial ones.
+- There are no automated tests yet.
 
 ## Dashboard, local web UI and compare mode
 
